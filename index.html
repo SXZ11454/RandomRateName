@@ -8,7 +8,6 @@
   <!-- 设置网页图标 -->
   <link rel="icon" href="favicon.png" type="image/png">
 
-  <!-- 加载可变字体 -->
   <style>
     @font-face {
       font-family: 'NotoSansSC';
@@ -19,15 +18,51 @@
     }
 
     :root {
+      /* 浅色模式变量 */
       --primary-color: #4CAF50;
       --danger-color: #f44336;
       --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
       --card-shadow: 0 8px 24px rgba(0,0,0,0.1);
       --border-radius: 12px;
+      --text-color: #333;
+      --text-color-light: #555;
+      --text-color-strong: #000;
+      --table-bg: white;
+      --table-header-bg: #f8f9fa;
+      --table-border: #eee;
+      --input-bg: white;
+      --input-border: #ccc;
+      --btn-text: white;
+      --title-color: black;
+      --menu-bg: white;
+      --menu-border: #ddd;
+      --error-bg: #ffebee;
+      --error-text: #b71c1c;
+    }
+
+    /* 深色模式变量 */
+    .dark-mode {
+      --bg-gradient: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      --text-color: #e0e0e0;
+      --text-color-light: #aaa;
+      --text-color-strong: #ffffff;
+      --table-bg: #1e1e1e;
+      --table-header-bg: #2d2d2d;
+      --table-border: #444;
+      --input-bg: #2d2d2d;
+      --input-border: #555;
+      --card-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      --btn-text: white;
+      --title-color: white; /* 标题反色 */
+      --menu-bg: #2d2d2d;
+      --menu-border: #444;
+      --error-bg: #380b0b;
+      --error-text: #ff8a80;
     }
 
     * {
       box-sizing: border-box;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
     }
 
     html {
@@ -43,7 +78,7 @@
       margin: 0;
       min-height: 100vh;
       max-height: 100vh;
-      color: #333;
+      color: var(--text-color);
       transition: background 0.8s ease;
       overflow-x: hidden;
       overflow-y: auto;
@@ -63,6 +98,28 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+    }
+
+    /* --- 错误提示 --- */
+    .error-message {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--error-bg);
+      color: var(--error-text);
+      padding: 10px 20px;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    .error-message.show {
+      opacity: 1;
     }
 
     /* --- 标题区域：图标 + 文字 --- */
@@ -87,11 +144,12 @@
       font-family: 'NotoSansSC', sans-serif;
       font-variation-settings: 'wght' 900;
       font-size: 2.3em;
-      color: black;
+      color: var(--title-color); /* 使用变量 */
       margin: 0;
       line-height: 1;
       opacity: 0;
       animation: titleFadeIn 0.8s 0.3s ease forwards;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
 
     /* --- 动画定义 --- */
@@ -146,16 +204,17 @@
       padding: 0 14px;
       width: 320px;
       max-width: 100%;
-      border: 2px solid #ccc;
+      border: 2px solid var(--input-border);
       border-radius: 10px;
       outline: none;
-      background-color: white;
+      background-color: var(--input-bg);
       transition: border-color 0.3s, box-shadow 0.3s;
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
       height: 48px;
       line-height: 48px;
       text-align: left;
       position: relative;
+      color: var(--text-color-strong);
     }
 
     #nameInput::after {
@@ -177,7 +236,6 @@
       box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.2);
     }
 
-
     #nameInput:focus::after {
       display: block;
     }
@@ -187,7 +245,7 @@
       font-family: 'NotoSansSC', sans-serif;
       font-variation-settings: 'wght' 900;
       font-size: 16px;
-      color: white;
+      color: var(--btn-text);
       border: none;
       padding: 0 20px;
       border-radius: 10px;
@@ -195,10 +253,11 @@
       height: 48px;
       min-width: 80px;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       display: flex;
       align-items: center;
       justify-content: center;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
 
     #submitBtn {
@@ -233,6 +292,129 @@
       box-shadow: 0 2px 6px rgba(244, 67, 54, 0.25);
     }
 
+    /* 固定在左下角的深色模式切换按钮 */
+    .theme-toggle {
+      position: fixed;
+      left: 15px;
+      bottom: 15px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      opacity: 0.8;
+      z-index: 1000;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--table-bg);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .theme-toggle:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .theme-toggle img {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      transition: all 0.4s ease;
+    }
+
+    /* --- 按钮图标反色 --- */
+    .dark-mode .theme-toggle img {
+      filter: invert(1) brightness(0.9) saturate(1.1);
+    }
+
+    /* 固定在右下角的分享按钮 */
+    .share-toggle {
+      position: fixed;
+      right: 15px;
+      bottom: 15px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      opacity: 0.8;
+      z-index: 1000;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--table-bg);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .share-toggle:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .share-toggle img {
+      height: 20px;
+      width: 20px;
+      transition: all 0.4s ease;
+    }
+
+    /* --- 分享按钮反色效果 --- */
+    .dark-mode .share-toggle img {
+      filter: invert(1) brightness(0.9) saturate(1.1);
+    }
+
+    /* --- 分享菜单 --- */
+    .share-menu {
+      position: fixed;
+      right: 65px;
+      bottom: 15px;
+      background-color: var(--menu-bg);
+      border: 1px solid var(--menu-border);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden;
+      z-index: 999;
+      transform: scale(0.8);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .share-menu.active {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .share-menu-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      color: var(--text-color-strong);
+      font-family: 'NotoSansSC', sans-serif;
+      font-variation-settings: 'wght' 400;
+      font-size: 14px;
+      transition: background-color 0.2s;
+      white-space: nowrap;
+    }
+
+    .share-menu-item:hover {
+      background-color: rgba(0,0,0,0.05);
+    }
+
+    .dark-mode .share-menu-item:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    .share-menu-item.disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
     /* --- 表格样式 --- */
     table {
       font-family: 'NotoSansSC', sans-serif;
@@ -245,7 +427,7 @@
       border-radius: var(--border-radius);
       overflow: hidden;
       box-shadow: var(--card-shadow);
-      background-color: white;
+      background-color: var(--table-bg);
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.5s ease, transform 0.5s ease;
@@ -261,13 +443,14 @@
     th, td {
       padding: 14px 12px;
       text-align: center;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--table-border);
       width: 33.333%;
+      color: var(--text-color-strong);
     }
 
     th {
-      background: #f8f9fa;
-      color: #333;
+      background: var(--table-header-bg);
+      color: var(--text-color-strong);
       font-variation-settings: 'wght' 700;
     }
 
@@ -291,7 +474,7 @@
         opacity: 1;
         transform: translateY(0);
         height: 48px;
-        background-color: white;
+        background-color: var(--table-bg);
         padding: 14px 12px;
       }
       100% {
@@ -310,10 +493,8 @@
       position: relative;
       z-index: 1;
     }
-  </style>
 
-  <!-- --- 响应式适配手机 --- -->
-  <style>
+    /* --- 响应式适配手机 --- */
     @media (max-width: 600px) {
       h1 {
         font-size: 2.2em;
@@ -347,6 +528,9 @@
 <body>
 
   <div class="main-container">
+    <!-- 错误提示 -->
+    <div class="error-message" id="errorMessage"></div>
+    
     <!-- 标题：图标 + 文字 -->
     <div class="title-container">
       <img src="favicon.png" alt="图标" class="title-icon">
@@ -375,161 +559,515 @@
     </table>
   </div>
 
+  <!-- 固定在左下角的深色模式切换按钮 -->
+  <button class="theme-toggle" id="themeToggle" aria-label="切换深色模式">
+    <img src="daynight.png" alt="切换深色模式">
+  </button>
+
+  <!-- 固定在右下角的分享按钮 -->
+  <button class="share-toggle" id="shareToggle" aria-label="分享">
+    <img src="share.png" alt="分享">
+  </button>
+
+  <!-- 分享菜单 -->
+  <div class="share-menu" id="shareMenu">
+    <div class="share-menu-item" data-action="downloadImage">下载图片</div>
+    <div class="share-menu-item" data-action="downloadCSV">下载CSV</div>
+  </div>
+
   <script>
-    const input = document.getElementById('nameInput');
-    const submitBtn = document.getElementById('submitBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const table = document.getElementById('resultTable');
-    const tableBody = document.getElementById('tableBody');
-
-    let records = [];
-    let isClearing = false; // 标记是否正在进行清除动画
-    let clearAnimationTimeouts = []; // 存储清除动画的超时ID
-
-    function getScoreAndGrade() {
-      const score = Math.floor(Math.random() * 26) + 75;
-      let grade;
-      if (score >= 75 && score <= 79) grade = "良好";
-      else if (score >= 80 && score <= 89) grade = "优秀";
-      else if (score >= 90 && score <= 100) grade = "完美";
-      return { score, grade };
-    }
-
-    function addRecord(name) {
-      const { score, grade } = getScoreAndGrade();
-      records.unshift({ name, score, grade });
-      if (records.length > 15) records.length = 15;
-      renderTable(true); // 标记为新增
-    }
-
-    function renderTable(isAdd = false) {
-      // 如果正在执行清除动画，跳过渲染
-      if (isClearing) return;
-
-      if (records.length === 0) {
-        // 清空表格内容
-        tableBody.innerHTML = '';
-        table.classList.remove('show');
-        return;
+    // 全局错误处理
+    window.onerror = function(message, source, lineno, colno, error) {
+      const errorMessage = document.getElementById('errorMessage');
+      if (errorMessage) {
+        errorMessage.textContent = '系统错误: ' + message;
+        errorMessage.classList.add('show');
+        setTimeout(() => errorMessage.classList.remove('show'), 5000);
       }
+      console.error('全局错误:', error);
+      return true; // 阻止默认错误处理
+    };
 
-      // 重建所有行
-      const fragment = document.createDocumentFragment();
-      
-      records.forEach((record, index) => {
-        const row = document.createElement('tr');
-        
-        // 仅新行添加动画类
-        if (isAdd && index === 0) {
-          row.classList.add('new-row');
+    // 安全获取元素函数
+    function getElement(id) {
+      const element = document.getElementById(id);
+      if (!element) {
+        console.warn(`元素 #${id} 未找到`);
+      }
+      return element;
+    }
+
+    // 显示错误消息
+    function showError(message) {
+      const errorMessage = getElement('errorMessage');
+      if (errorMessage) {
+        errorMessage.textContent = message;
+        errorMessage.classList.add('show');
+        setTimeout(() => errorMessage.classList.remove('show'), 5000);
+      }
+      console.error('应用错误:', message);
+    }
+
+    // 确保DOM完全加载后再执行
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        // 安全获取所有元素
+        const input = getElement('nameInput');
+        const submitBtn = getElement('submitBtn');
+        const clearBtn = getElement('clearBtn');
+        const themeToggle = getElement('themeToggle');
+        const shareToggle = getElement('shareToggle');
+        const shareMenu = getElement('shareMenu');
+        const table = getElement('resultTable');
+        const tableBody = getElement('tableBody');
+
+        // 检查关键元素是否存在
+        if (!input || !submitBtn || !clearBtn || !tableBody) {
+          throw new Error('关键DOM元素未找到，页面无法正常工作');
+        }
+
+        let records = [];
+        let isClearing = false; // 标记是否正在进行清除动画
+        let clearAnimationTimeouts = []; // 存储清除动画的超时ID
+        let isShareMenuOpen = false; // 标记分享菜单是否打开
+
+        function getScoreAndGrade() {
+          const score = Math.floor(Math.random() * 26) + 75;
+          let grade;
+          if (score >= 75 && score <= 79) grade = "良好";
+          else if (score >= 80 && score <= 89) grade = "优秀";
+          else if (score >= 90 && score <= 100) grade = "完美";
+          return { score, grade };
+        }
+
+        function addRecord(name) {
+          const { score, grade } = getScoreAndGrade();
+          records.unshift({ name, score, grade });
+          if (records.length > 15) records.length = 15;
+          renderTable(true); // 标记为新增
+        }
+
+        function renderTable(isAdd = false) {
+          // 如果正在执行清除动画，跳过渲染
+          if (isClearing) {
+            return;
+          }
+
+          if (records.length === 0) {
+            // 清空表格内容
+            tableBody.innerHTML = '';
+            table.classList.remove('show');
+            return;
+          }
+
+          // 重建所有行
+          const fragment = document.createDocumentFragment();
+          
+          records.forEach((record, index) => {
+            const row = document.createElement('tr');
+            
+            // 仅新行添加动画类
+            if (isAdd && index === 0) {
+              row.classList.add('new-row');
+            }
+            
+            row.innerHTML = `
+              <td>${record.name}</td>
+              <td>${record.score}</td>
+              <td><strong>${record.grade}</strong></td>
+            `;
+            fragment.appendChild(row);
+          });
+
+          // 一次性更新DOM
+          tableBody.innerHTML = '';
+          tableBody.appendChild(fragment);
+
+          // 显示表格
+          table.classList.add('show');
+        }
+
+        function handleClear() {
+          // 清理之前可能存在的清除动画超时
+          clearAnimationTimeouts.forEach(timeoutId => {
+            clearTimeout(timeoutId);
+          });
+          clearAnimationTimeouts = [];
+          
+          if (isClearing || records.length === 0) {
+            return;
+          }
+          
+          isClearing = true;
+          records = [];
+          
+          const rows = Array.from(tableBody.querySelectorAll('tr'));
+          
+          // 如果没有行，直接隐藏表格
+          if (rows.length === 0) {
+            table.classList.remove('show');
+            isClearing = false;
+            return;
+          }
+          
+          let completedRows = 0;
+          
+          // 从最后一行开始，逐行向上执行擦除动画
+          rows.reverse().forEach((row, index) => {
+            // 设置动画延迟，使从底部向上依次消失
+            const timeoutId = setTimeout(() => {
+              // 添加擦除动画类
+              row.classList.add('wipe-out');
+              
+              // 动画结束后移除该行
+              const animationEndHandler = function() {
+                if (row.parentNode) {
+                  row.parentNode.removeChild(row);
+                }
+                
+                completedRows++;
+                
+                // 如果所有行都处理完毕
+                if (completedRows === rows.length) {
+                  table.classList.remove('show');
+                  isClearing = false;
+                }
+                
+                // 清理事件监听器
+                row.removeEventListener('animationend', animationEndHandler);
+              };
+              
+              row.addEventListener('animationend', animationEndHandler, { once: true });
+              
+              // 添加备选超时，防止动画事件未触发
+              const fallbackTimeout = setTimeout(() => {
+                if (completedRows < rows.length && row.parentNode) {
+                  row.parentNode.removeChild(row);
+                  completedRows++;
+                  
+                  if (completedRows === rows.length) {
+                    table.classList.remove('show');
+                    isClearing = false;
+                  }
+                }
+              }, 600); // 比动画时间稍长
+              
+              clearAnimationTimeouts.push(fallbackTimeout);
+            }, index * 200); // 每行延迟200ms
+            
+            clearAnimationTimeouts.push(timeoutId);
+          });
+          
+          input.focus();
+        }
+
+        function handleSubmit() {
+          const name = input.value.trim();
+          if (name === '') {
+            return;
+          }
+          addRecord(name);
+          input.value = '';
+          input.focus();
+        }
+
+        // 深色模式切换
+        function toggleTheme() {
+          document.body.classList.toggle('dark-mode');
+        }
+
+        // 分享菜单切换
+        function toggleShareMenu() {
+          isShareMenuOpen = !isShareMenuOpen;
+          
+          if (isShareMenuOpen) {
+            // 更新分享菜单内容
+            updateShareMenuContent();
+            shareMenu.classList.add('active');
+          } else {
+            shareMenu.classList.remove('active');
+          }
+        }
+
+        // 更新分享菜单内容
+        function updateShareMenuContent() {
+          // 清空现有内容
+          while (shareMenu.firstChild) {
+            shareMenu.removeChild(shareMenu.firstChild);
+          }
+          
+          if (records.length === 0) {
+            // 没有内容
+            const messageItem = document.createElement('div');
+            messageItem.className = 'share-menu-item disabled';
+            messageItem.textContent = '没有内容，无法分享';
+            shareMenu.appendChild(messageItem);
+          } else {
+            // 有内容，添加正常选项
+            const imageItem = document.createElement('div');
+            imageItem.className = 'share-menu-item';
+            imageItem.dataset.action = 'downloadImage';
+            imageItem.textContent = '下载图片';
+            shareMenu.appendChild(imageItem);
+            
+            const csvItem = document.createElement('div');
+            csvItem.className = 'share-menu-item';
+            csvItem.dataset.action = 'downloadCSV';
+            csvItem.textContent = '下载CSV';
+            shareMenu.appendChild(csvItem);
+          }
+        }
+
+        // 下载图片
+        function downloadImageAsJPG() {
+          if (records.length === 0) {
+            showError('没有内容可分享');
+            return;
+          }
+          
+          // 创建画布
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // 设置高分辨率画布
+          const dpi = window.devicePixelRatio || 1;
+          const tableWidth = 1200; // 提高宽度以获得更高分辨率
+          const rowHeight = 80; // 提高行高
+          const headerHeight = 80; // 提高表头高度
+          const topPadding = 40; // 顶部内边距
+          const bottomPadding = 60; // 增加底部内边距
+          const tableHeight = headerHeight + records.length * rowHeight + topPadding + bottomPadding;
+          
+          // 设置画布尺寸（考虑设备像素比）
+          canvas.width = tableWidth * dpi;
+          canvas.height = tableHeight * dpi;
+          
+          // 缩放上下文以匹配高DPI
+          ctx.scale(dpi, dpi);
+          
+          // 填充纯白背景
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // 绘制表格
+          let y = topPadding; // 起始Y坐标（顶部内边距）
+          
+          // 绘制表头
+          ctx.fillStyle = '#f8f9fa'; // 白色背景
+          ctx.fillRect(20, y, tableWidth - 40, headerHeight);
+          
+          // 绘制表头文字
+          ctx.font = 'bold 20px NotoSansSC, sans-serif';
+          ctx.fillStyle = 'black'; // 黑色文字
+          ctx.textAlign = 'center';
+          ctx.fillText('名字', tableWidth/6, y + headerHeight/2 + 5);
+          ctx.fillText('分数', tableWidth/2, y + headerHeight/2 + 5);
+          ctx.fillText('等级', tableWidth*5/6, y + headerHeight/2 + 5);
+          
+          // 绘制分隔线
+          ctx.strokeStyle = '#ddd'; // 灰色虚线
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          ctx.moveTo(20, y + headerHeight);
+          ctx.lineTo(tableWidth - 20, y + headerHeight);
+          ctx.stroke();
+          
+          y += headerHeight;
+          
+          // 绘制表格行
+          records.forEach((record, index) => {
+            // 绘制行背景（交替颜色）
+            if (index % 2 === 0) {
+              ctx.fillStyle = '#f9f9f9'; // 浅灰色背景
+              ctx.fillRect(20, y, tableWidth - 40, rowHeight);
+            }
+            
+            // 绘制行文字
+            ctx.font = '18px NotoSansSC, sans-serif';
+            ctx.fillStyle = 'black'; // 黑色文字
+            ctx.textAlign = 'center';
+            ctx.fillText(record.name, tableWidth/6, y + rowHeight/2 + 5);
+            ctx.fillText(record.score, tableWidth/2, y + rowHeight/2 + 5);
+            ctx.font = 'bold 18px NotoSansSC, sans-serif';
+            ctx.fillText(record.grade, tableWidth*5/6, y + rowHeight/2 + 5);
+            
+            // 绘制分隔线
+            ctx.strokeStyle = '#ddd'; // 灰色虚线
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(20, y + rowHeight);
+            ctx.lineTo(tableWidth - 20, y + rowHeight);
+            ctx.stroke();
+            
+            y += rowHeight;
+          });
+          
+          // 绘制表格边框
+          ctx.strokeStyle = '#ddd'; // 灰色虚线
+          ctx.setLineDash([3, 3]);
+          ctx.strokeRect(20, topPadding, tableWidth - 40, tableHeight - topPadding - bottomPadding);
+          
+          // 从画布创建图片并下载
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+          
+          // 创建下载链接
+          const link = document.createElement('a');
+          link.download = '名字评分结果.jpg';
+          link.href = dataUrl;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // 关闭分享菜单
+          isShareMenuOpen = false;
+          shareMenu.classList.remove('active');
+        }
+
+        // 下载CSV
+        function downloadCSV() {
+          if (records.length === 0) {
+            showError('没有内容可分享');
+            return;
+          }
+          
+          // 创建CSV内容
+          let csvContent = '名字,分数,等级\n';
+          
+          records.forEach(record => {
+            csvContent += `${record.name},${record.score},${record.grade}\n`;
+          });
+          
+          // 创建Blob对象
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          
+          // 创建下载链接
+          const link = document.createElement('a');
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', '名字评分结果.csv');
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // 关闭分享菜单
+          isShareMenuOpen = false;
+          shareMenu.classList.remove('active');
+        }
+
+        // 事件委托处理分享菜单点击
+        shareMenu.addEventListener('click', function(e) {
+          const target = e.target;
+          if (target.matches('.share-menu-item')) {
+            const action = target.dataset.action;
+            if (action === 'downloadImage') {
+              downloadImageAsJPG();
+            } else if (action === 'downloadCSV') {
+              downloadCSV();
+            }
+          }
+        });
+
+        // 确保所有元素都存在后再绑定事件
+        if (submitBtn) {
+          submitBtn.addEventListener('click', function(e) {
+            try {
+              e.preventDefault();
+              handleSubmit();
+            } catch (error) {
+              showError('提交失败: ' + error.message);
+            }
+          });
         }
         
-        row.innerHTML = `
-          <td>${record.name}</td>
-          <td>${record.score}</td>
-          <td><strong>${record.grade}</strong></td>
-        `;
-        fragment.appendChild(row);
-      });
-
-      // 一次性更新DOM
-      tableBody.innerHTML = '';
-      tableBody.appendChild(fragment);
-
-      // 显示表格
-      table.classList.add('show');
-    }
-
-    function handleClear() {
-      // 清理之前可能存在的清除动画超时
-      clearAnimationTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
-      clearAnimationTimeouts = [];
-      
-      if (isClearing || records.length === 0) return;
-      
-      isClearing = true;
-      records = [];
-      
-      const rows = Array.from(tableBody.querySelectorAll('tr'));
-      
-      // 如果没有行，直接隐藏表格
-      if (rows.length === 0) {
-        table.classList.remove('show');
-        isClearing = false;
-        return;
-      }
-      
-      let completedRows = 0;
-      
-      // 从最后一行开始，逐行向上执行擦除动画
-      rows.reverse().forEach((row, index) => {
-        // 设置动画延迟，使从底部向上依次消失
-        const timeoutId = setTimeout(() => {
-          // 添加擦除动画类
-          row.classList.add('wipe-out');
-          
-          // 动画结束后移除该行
-          const animationEndHandler = function() {
-            if (row.parentNode) {
-              row.parentNode.removeChild(row);
+        if (clearBtn) {
+          clearBtn.addEventListener('click', function(e) {
+            try {
+              e.preventDefault();
+              handleClear();
+            } catch (error) {
+              showError('清除失败: ' + error.message);
             }
-            
-            completedRows++;
-            
-            // 如果所有行都处理完毕
-            if (completedRows === rows.length) {
-              table.classList.remove('show');
-              isClearing = false;
-            }
-            
-            // 清理事件监听器
-            row.removeEventListener('animationend', animationEndHandler);
-          };
-          
-          row.addEventListener('animationend', animationEndHandler, { once: true });
-          
-          // 添加备选超时，防止动画事件未触发
-          const fallbackTimeout = setTimeout(() => {
-            if (completedRows < rows.length && row.parentNode) {
-              row.parentNode.removeChild(row);
-              completedRows++;
-              
-              if (completedRows === rows.length) {
-                table.classList.remove('show');
-                isClearing = false;
-              }
-            }
-          }, 600); // 比动画时间稍长
-          
-          clearAnimationTimeouts.push(fallbackTimeout);
-        }, index * 200); // 每行延迟200ms
+          });
+        }
         
-        clearAnimationTimeouts.push(timeoutId);
-      });
-      
-      input.focus();
-    }
+        if (themeToggle) {
+          themeToggle.addEventListener('click', function(e) {
+            try {
+              e.preventDefault();
+              toggleTheme();
+            } catch (error) {
+              showError('主题切换失败: ' + error.message);
+            }
+          });
+        }
+        
+        if (shareToggle) {
+          shareToggle.addEventListener('click', function(e) {
+            try {
+              e.preventDefault();
+              toggleShareMenu();
+            } catch (error) {
+              showError('分享菜单失败: ' + error.message);
+            }
+          });
+        }
+        
+        // 初始更新分享菜单
+        updateShareMenuContent();
 
-    function handleSubmit() {
-      const name = input.value.trim();
-      if (name === '') return;
-      addRecord(name);
-      input.value = '';
-      input.focus();
-    }
+        // 点击页面其他区域关闭分享菜单
+        document.addEventListener('click', function(e) {
+          try {
+            if (isShareMenuOpen && 
+                !shareMenu.contains(e.target) && 
+                e.target !== shareToggle && 
+                !shareToggle.contains(e.target)) {
+              isShareMenuOpen = false;
+              shareMenu.classList.remove('active');
+            }
+          } catch (error) {
+            showError('页面点击处理失败: ' + error.message);
+          }
+        });
 
-    submitBtn.addEventListener('click', handleSubmit);
-    clearBtn.addEventListener('click', handleClear);
+        if (input) {
+          input.addEventListener('keypress', function(e) {
+            try {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit();
+              }
+            } catch (error) {
+              showError('输入处理失败: ' + error.message);
+            }
+          });
 
-    input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handleSubmit();
+          input.addEventListener('touchstart', function() {
+            try {
+              setTimeout(() => input.focus(), 300);
+            } catch (error) {
+              showError('触摸处理失败: ' + error.message);
+            }
+          });
+
+          input.focus();
+        }
+      } catch (error) {
+        showError('应用初始化失败: ' + error.message);
+        console.error('初始化错误:', error);
+        
+        // 简单恢复基本功能
+        const input = getElement('nameInput');
+        if (input) {
+          try {
+            input.focus();
+          } catch (e) {
+            console.error('恢复输入框焦点失败:', e);
+          }
+        }
+      }
     });
-
-    input.addEventListener('touchstart', () => {
-      setTimeout(() => input.focus(), 300);
-    });
-
-    input.focus();
   </script>
 
 </body>
