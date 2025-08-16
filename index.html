@@ -177,6 +177,7 @@
       box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.2);
     }
 
+
     #nameInput:focus::after {
       display: block;
     }
@@ -257,18 +258,6 @@
       display: table;
     }
 
-    /* --- 新增：从上往下擦除动画 --- */
-    table.hiding {
-      animation: hideSlideDown 0.4s ease forwards;
-      /* 保持 display: table 直到动画结束 */
-    }
-
-    @keyframes hideSlideDown {
-      to {
-        clip-path: inset(100% 0 0 0);
-      }
-    }
-
     th, td {
       padding: 14px 12px;
       text-align: center;
@@ -283,12 +272,43 @@
     }
 
     tbody tr {
+      opacity: 1;
+      transform: translateY(0);
+      height: auto;
+      transition: all 0.3s;
+    }
+
+    /* 新增行动画 */
+    tbody tr.new-row {
+      animation: slideInFromLeft 0.4s ease forwards;
       opacity: 0;
       transform: translateX(-30px);
     }
 
-    tbody .slide-in {
-      animation: slideInFromLeft 0.4s ease forwards;
+    /* --- 分片式擦除动画：每行独立执行 --- */
+    @keyframes wipeRow {
+      0% {
+        opacity: 1;
+        transform: translateY(0);
+        height: 48px;
+        background-color: white;
+        padding: 14px 12px;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-50px);
+        height: 0;
+        background-color: transparent;
+        padding: 0;
+        border-bottom: none;
+      }
+    }
+
+    /* 应用擦除动画的类 */
+    tr.wipe-out {
+      animation: wipeRow 0.4s ease forwards;
+      position: relative;
+      z-index: 1;
     }
   </style>
 
@@ -363,6 +383,8 @@
     const tableBody = document.getElementById('tableBody');
 
     let records = [];
+    let isClearing = false; // 标记是否正在进行清除动画
+    let clearAnimationTimeouts = []; // 存储清除动画的超时ID
 
     function getScoreAndGrade() {
       const score = Math.floor(Math.random() * 26) + 75;
@@ -377,60 +399,123 @@
       const { score, grade } = getScoreAndGrade();
       records.unshift({ name, score, grade });
       if (records.length > 15) records.length = 15;
-      renderTable();
+      renderTable(true); // 标记为新增
     }
 
-    function renderTable() {
-      // 清空内容
-      tableBody.innerHTML = '';
+    function renderTable(isAdd = false) {
+      // 如果正在执行清除动画，跳过渲染
+      if (isClearing) return;
 
       if (records.length === 0) {
-        // 如果表格正在显示，触发动画
-        if (table.classList.contains('show')) {
-          table.classList.add('hiding');
-          // 动画结束后再隐藏
-          table.addEventListener('animationend', function animHandler() {
-            table.classList.remove('show', 'hiding');
-            table.style.clipPath = ''; // 重置
-            table.removeEventListener('animationend', animHandler);
-          }, { once: true });
-        } else {
-          table.classList.remove('show');
-        }
+        // 清空表格内容
+        tableBody.innerHTML = '';
+        table.classList.remove('show');
         return;
       }
 
-      // 有数据时：插入并显示
-      records.forEach((record， index) => {
-        const row = document。createElement('tr');
-        row.style.transitionDelay = `${index * 0.08}s`;
-        row.classList.add('slide-in');
+      // 重建所有行
+      const fragment = document.createDocumentFragment();
+      
+      records.forEach((record, index) => {
+        const row = document.createElement('tr');
+        
+        // 仅新行添加动画类
+        if (isAdd && index === 0) {
+          row.classList.add('new-row');
+        }
+        
         row.innerHTML = `
           <td>${record.name}</td>
-          <td>${record。score}</td>
-          <td><strong>${record。grade}</strong></td>
+          <td>${record.score}</td>
+          <td><strong>${record.grade}</strong></td>
         `;
-        tableBody。appendChild(row);
+        fragment.appendChild(row);
       });
 
-      // 取消可能的动画状态
-      table。classList。remove('hiding');
-      table.style.clipPath = '';
+      // 一次性更新DOM
+      tableBody.innerHTML = '';
+      tableBody.appendChild(fragment);
+
+      // 显示表格
       table.classList.add('show');
     }
 
+    function handleClear() {
+      // 清理之前可能存在的清除动画超时
+      clearAnimationTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+      clearAnimationTimeouts = [];
+      
+      if (isClearing || records.length === 0) return;
+      
+      isClearing = true;
+      records = [];
+      
+      const rows = Array.from(tableBody.querySelectorAll('tr'));
+      
+      // 如果没有行，直接隐藏表格
+      if (rows.length === 0) {
+        table.classList.remove('show');
+        isClearing = false;
+        return;
+      }
+      
+      let completedRows = 0;
+      
+      // 从最后一行开始，逐行向上执行擦除动画
+      rows.reverse().forEach((row, index) => {
+        // 设置动画延迟，使从底部向上依次消失
+        const timeoutId = setTimeout(() => {
+          // 添加擦除动画类
+          row.classList.add('wipe-out');
+          
+          // 动画结束后移除该行
+          const animationEndHandler = function() {
+            if (row.parentNode) {
+              row.parentNode.removeChild(row);
+            }
+            
+            completedRows++;
+            
+            // 如果所有行都处理完毕
+            if (completedRows === rows.length) {
+              table.classList.remove('show');
+              isClearing = false;
+            }
+            
+            // 清理事件监听器
+            row.removeEventListener('animationend', animationEndHandler);
+          };
+          
+          row.addEventListener('animationend', animationEndHandler, { once: true });
+          
+          // 添加备选超时，防止动画事件未触发
+          const fallbackTimeout = setTimeout(() => {
+            if (completedRows < rows.length && row.parentNode) {
+              row.parentNode.removeChild(row);
+              completedRows++;
+              
+              if (completedRows === rows.length) {
+                table.classList.remove('show');
+                isClearing = false;
+              }
+            }
+          }, 600); // 比动画时间稍长
+          
+          clearAnimationTimeouts.push(fallbackTimeout);
+        }, index * 200); // 每行延迟200ms
+        
+        clearAnimationTimeouts.push(timeoutId);
+      });
+      
+      input.focus();
+    }
+
     function handleSubmit() {
-      const name = input.value。trim();
+      const name = input.value.trim();
       if (name === '') return;
       addRecord(name);
       input.value = '';
-      input。focus();
-    }
-
-    function handleClear() {
-      records = [];
-      renderTable(); // 触发动画后隐藏
-      input。focus();
+      input.focus();
     }
 
     submitBtn.addEventListener('click', handleSubmit);
