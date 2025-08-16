@@ -20,21 +20,49 @@
 
     :root {
       --primary-color: #4CAF50;
+      --danger-color: #f44336;
       --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
       --card-shadow: 0 8px 24px rgba(0,0,0,0.1);
       --border-radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      height: 100%;
+      overflow: hidden;
     }
 
     body {
       font-family: 'NotoSansSC', sans-serif;
       font-variation-settings: 'wght' 400;
       background: var(--bg-gradient);
-      padding: 30px 15px;
+      padding: 0;
       margin: 0;
       min-height: 100vh;
+      max-height: 100vh;
       color: #333;
       transition: background 0.8s ease;
       overflow-x: hidden;
+      overflow-y: auto;
+
+      padding-top: 50px;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .main-container {
+      width: 100%;
+      max-width: 640px;
+      padding: 0 15px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     /* --- 标题区域：图标 + 文字 --- */
@@ -114,8 +142,8 @@
     #nameInput {
       font-family: 'NotoSansSC', sans-serif;
       font-variation-settings: 'wght' 400;
-      font-size: 16px; /* 稍微缩小字体，适配高度 */
-      padding: 0 14px; /* 垂直内边距由 line-height 控制 */
+      font-size: 16px;
+      padding: 0 14px;
       width: 320px;
       max-width: 100%;
       border: 2px solid #ccc;
@@ -125,10 +153,8 @@
       transition: border-color 0.3s, box-shadow 0.3s;
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
       height: 48px;
-      line-height: 48px; /* 垂直居中 */
+      line-height: 48px;
       text-align: left;
-
-      /* 波浪线容器 */
       position: relative;
     }
 
@@ -155,12 +181,12 @@
       display: block;
     }
 
-    #submitBtn {
+    /* --- 按钮通用样式 --- */
+    .btn {
       font-family: 'NotoSansSC', sans-serif;
       font-variation-settings: 'wght' 900;
       font-size: 16px;
       color: white;
-      background: var(--primary-color);
       border: none;
       padding: 0 20px;
       border-radius: 10px;
@@ -168,10 +194,15 @@
       height: 48px;
       min-width: 80px;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    #submitBtn {
+      background: var(--primary-color);
+      box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
     }
 
     #submitBtn:hover {
@@ -183,6 +214,22 @@
     #submitBtn:active {
       transform: translateY(0);
       box-shadow: 0 2px 6px rgba(76, 175, 80, 0.25);
+    }
+
+    #clearBtn {
+      background: var(--danger-color);
+      box-shadow: 0 4px 10px rgba(244, 67, 54, 0.3);
+    }
+
+    #clearBtn:hover {
+      background: #d32f2f;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(244, 67, 54, 0.35);
+    }
+
+    #clearBtn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(244, 67, 54, 0.25);
     }
 
     /* --- 表格样式 --- */
@@ -201,11 +248,25 @@
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.5s ease, transform 0.5s ease;
+      display: none;
     }
 
     table.show {
       opacity: 1;
       transform: translateY(0);
+      display: table;
+    }
+
+    /* --- 新增：从上往下擦除动画 --- */
+    table.hiding {
+      animation: hideSlideDown 0.4s ease forwards;
+      /* 保持 display: table 直到动画结束 */
+    }
+
+    @keyframes hideSlideDown {
+      to {
+        clip-path: inset(100% 0 0 0);
+      }
     }
 
     th, td {
@@ -247,7 +308,8 @@
         gap: 16px;
       }
 
-      #nameInput, #submitBtn {
+      #nameInput,
+      .btn {
         width: 100%;
         max-width: 320px;
         font-size: 16px;
@@ -255,50 +317,48 @@
         line-height: 48px;
       }
 
-      table {
-        width: 100%;
-        font-size: 15px;
-      }
-
-      th, td {
-        padding: 12px 8px;
-      }
-
       body {
         padding: 15px;
+        padding-top: 50px;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- 标题：图标 + 文字 -->
-  <div class="title-container">
-    <img src="favicon.png" alt="图标" class="title-icon">
-    <h1>dy专用免费名字评分</h1>
-  </div>
+  <div class="main-container">
+    <!-- 标题：图标 + 文字 -->
+    <div class="title-container">
+      <img src="favicon.png" alt="图标" class="title-icon">
+      <h1>dy专用免费名字评分</h1>
+    </div>
 
-  <div class="input-container">
-    <input type="text" id="nameInput" placeholder="请输入您的名字" autocomplete="off" />
-    <button id="submitBtn">确定</button>
-  </div>
+    <!-- 输入区域 -->
+    <div class="input-container">
+      <input type="text" id="nameInput" placeholder="请输入您的名字" autocomplete="off" />
+      <button id="submitBtn" class="btn">确定</button>
+      <button id="clearBtn" class="btn">清除</button>
+    </div>
 
-  <table id="resultTable">
-    <thead>
-      <tr>
-        <th>名字</th>
-        <th>分数</th>
-        <th>等级</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody">
-      <!-- 动态插入 -->
-    </tbody>
-  </table>
+    <!-- 表格 -->
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th>名字</th>
+          <th>分数</th>
+          <th>等级</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- 动态插入 -->
+      </tbody>
+    </table>
+  </div>
 
   <script>
     const input = document.getElementById('nameInput');
-    const button = document.getElementById('submitBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const clearBtn = document.getElementById('clearBtn');
     const table = document.getElementById('resultTable');
     const tableBody = document.getElementById('tableBody');
 
@@ -321,35 +381,65 @@
     }
 
     function renderTable() {
+      // 清空内容
       tableBody.innerHTML = '';
-      records.forEach((record, index) => {
-        const row = document.createElement('tr');
+
+      if (records.length === 0) {
+        // 如果表格正在显示，触发动画
+        if (table.classList.contains('show')) {
+          table.classList.add('hiding');
+          // 动画结束后再隐藏
+          table.addEventListener('animationend', function animHandler() {
+            table.classList.remove('show', 'hiding');
+            table.style.clipPath = ''; // 重置
+            table.removeEventListener('animationend', animHandler);
+          }, { once: true });
+        } else {
+          table.classList.remove('show');
+        }
+        return;
+      }
+
+      // 有数据时：插入并显示
+      records.forEach((record， index) => {
+        const row = document。createElement('tr');
         row.style.transitionDelay = `${index * 0.08}s`;
         row.classList.add('slide-in');
         row.innerHTML = `
           <td>${record.name}</td>
-          <td>${record.score}</td>
-          <td><strong>${record.grade}</strong></td>
+          <td>${record。score}</td>
+          <td><strong>${record。grade}</strong></td>
         `;
-        tableBody.appendChild(row);
+        tableBody。appendChild(row);
       });
+
+      // 取消可能的动画状态
+      table。classList。remove('hiding');
+      table.style.clipPath = '';
       table.classList.add('show');
     }
 
     function handleSubmit() {
-      const name = input.value.trim();
+      const name = input.value。trim();
       if (name === '') return;
       addRecord(name);
       input.value = '';
-      input.focus();
+      input。focus();
     }
 
-    button.addEventListener('click', handleSubmit);
+    function handleClear() {
+      records = [];
+      renderTable(); // 触发动画后隐藏
+      input。focus();
+    }
+
+    submitBtn.addEventListener('click', handleSubmit);
+    clearBtn.addEventListener('click', handleClear);
+
     input.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handleSubmit();
     });
 
-    // 触控设备聚焦优化
     input.addEventListener('touchstart', () => {
       setTimeout(() => input.focus(), 300);
     });
